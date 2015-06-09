@@ -40,13 +40,13 @@ public class Main {
 	private static JEP j;
 	public static void main(String... args){
 		argu = args;
-		bot = new Irc(Config.server,Config.username,Config.password);
+		bot = new Irc(Config.server,login.username,login.password);
 		try {
 			j = new JEP();j.addStandardConstants();j.addStandardFunctions();j.addComplex();j.setAllowUndeclared(true);j.setAllowAssignment(true);j.setImplicitMul(true);
 			cbot = new ChatterBotFactory().create(ChatterBotType.JABBERWACKY).createSession();
 			System.out.println(bot.Connect()?"Connected":"Could Not Connect");
 			bot.Join(Config.startingChannel.toLowerCase(),false,false);
-			bot.Join(Config.username, true, false);
+			bot.Join(login.username, true, false);
 			getChannels();
 			bot.start();
 		} catch (Exception e) {
