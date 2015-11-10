@@ -17,9 +17,11 @@ public class joinThread extends Thread {
 		}
 		try {
 			if(!irc.channels.containsKey(chn.channelName)){
-				irc.writer.write("JOIN #"+chn.channelName.toLowerCase()+"\r\n");
-				irc.writer.flush();
-				irc.channels.put(chn.channelName,chn);
+				irc.getWriter().write("JOIN #"+chn.channelName.toLowerCase()+"\r\n");
+				irc.getWriter().flush();
+				while(!irc.channels.containsKey(chn.channelName))
+					irc.channels.put(chn.channelName,chn);
+				
 				Main.processChannelJoin(chn);
 				if(!chn.silentJoin)
 					irc.sendMSG("I have joined your channel("+chn.channelName+")! Hello there.", chn.channelName);

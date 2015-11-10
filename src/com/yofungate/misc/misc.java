@@ -24,8 +24,21 @@ public class misc {
 		con.setRequestProperty("User-Agent", "Mozilla/5.99");
 		int responseCode = con.getResponseCode();
 		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-		if(responseCode==200)return in;
-		return null;
+		return in;
+	}
+	public static String returnGet(String _url) throws Exception{
+		URL url = new URL(_url);
+		HttpURLConnection con = (HttpURLConnection) url.openConnection();
+		con.setRequestMethod("GET");
+		con.setRequestProperty("User-Agent", "Mozilla/5.99");
+		int responseCode = con.getResponseCode();
+		BufferedReader br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String result = "";
+		String line = "";
+		while((line = br.readLine()) != null){
+			result += line;
+		}
+		return result;
 	}
 	public static boolean sendPOST(String _url,String _args) throws Exception{
 		URL url = new URL(_url);
@@ -82,5 +95,19 @@ public class misc {
 			setName(s);
 			return this;
 		}
+	}
+	public static String unsplit(String[] parts, String splitter)
+	{
+		if (parts == null) return null;
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < parts.length; i++)
+		{
+			if (parts[i] != null) buf.append(parts[i]);
+			buf.append(splitter);
+		}
+		
+		// remove the trailing splitter
+		buf.setLength(buf.length()-splitter.length());
+		return buf.toString();
 	}
 }

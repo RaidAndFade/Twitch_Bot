@@ -3,10 +3,12 @@ package com.yofungate.Irc;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.yofungate.ircBot.Main;
+
 public class channel {
 	private ArrayList<String> mods = new ArrayList<String>();
 	public String channelName;
-	public boolean isMuted;
+	public boolean isMuted = false;
 	public boolean silentJoin;
 	public channel(String _channel) {
 		this.channelName=_channel;
