@@ -1,14 +1,10 @@
 package com.yofungate.Irc;
 
-import it.gocode.twitchBot.commands.CommandSender;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +13,7 @@ import com.yofungate.ircBot.Main;
 
 public class Irc extends Thread{
 	protected String server,username,password;
+
 	public Map<String,channel> channels = new HashMap<String,channel>();
 	protected  Socket socket;
 	BufferedWriter writer;
@@ -42,6 +39,7 @@ public class Irc extends Thread{
 			thisChannel.isMuted=isMute;
 			thisChannel.silentJoin=silent;
 			joinManager.Join(thisChannel);
+			Main.joinedAt.put(_channel, System.currentTimeMillis());
 		}
 	}
 	public void Leave(String _channel,boolean silent,boolean removefromARR) throws IOException{
@@ -63,7 +61,7 @@ public class Irc extends Thread{
 			while((dline=reader.readLine())!=null){
 				final String line = dline;
 				try {
-					//if(line!=null)System.out.println(line);	
+					if(line!=null)System.out.println(line);	
 					if(line.toLowerCase().startsWith("ping ")){
 						//Respond to keep alive~
 						tempWriter.write("PONG yofungate.com "+line.substring(5)+"\r\n");
@@ -152,6 +150,8 @@ public class Irc extends Thread{
 	public void setWriter(BufferedWriter writer) {
 		this.writer = writer;
 	}
-
+	public String getUsername() {
+		return username;
+	}
 }
 

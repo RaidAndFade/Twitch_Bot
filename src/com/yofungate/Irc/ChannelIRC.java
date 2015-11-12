@@ -49,13 +49,12 @@ public class ChannelIRC extends Irc {
 	}
 	public long lastTime;
 	public void sendMSG(final String msg,final CommandSender _sender){
-		String channel = _sender.fromChannel;
-		new Thread("Sending Message to "+(this.isWhisperClient?_sender.name:_sender.fromChannel)){
+		final String channel = _sender.fromChannel;
+		new Thread("Sending Message to "+(_sender.fromChannel)){
 			public void run(){
 				try {
-					String channel = _sender.fromChannel;
 					if(channels.get(channel).isMuted&&!msg.startsWith("/")){return;}
-					if((System.currentTimeMillis()-lastTime)<1000){return;}
+					while((System.currentTimeMillis()-lastTime)<1550){Thread.sleep(System.currentTimeMillis()-lastTime);}
 					try {
 						writer.write("PRIVMSG #"+channel+" :"+msg+"\r\n");
 						writer.flush();

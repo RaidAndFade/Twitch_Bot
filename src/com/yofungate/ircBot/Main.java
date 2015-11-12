@@ -2,6 +2,10 @@ package com.yofungate.ircBot;
 
 import it.gocode.twitchBot.commands.Command;
 import it.gocode.twitchBot.commands.CommandSender;
+import it.gocode.twitchBot.commands.beCleverCommand;
+import it.gocode.twitchBot.commands.channel.raffleCommandHandler;
+import it.gocode.twitchBot.followers.Followers;
+import it.gocode.twitchBot.followers.Followers.followerCounter;
 
 import java.io.BufferedReader;
 import java.text.ParseException;
@@ -20,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.nfunk.jep.JEP;
 import org.nfunk.jep.Node;
 
+import com.google.code.chatterbotapi.ChatterBot;
 import com.google.code.chatterbotapi.ChatterBotFactory;
 import com.google.code.chatterbotapi.ChatterBotSession;
 import com.google.code.chatterbotapi.ChatterBotType;
@@ -38,6 +43,7 @@ import static com.yofungate.ircBot.LogManager.*;
 public class Main {
 	public static ChannelIRC bot;
 	public static WhisperIRC wis;
+	public static String botName;
 	public static int crawlgoal;
 	public static String[] argu;
 	public static boolean isCrawling = false,isLogging = true,crawlStarted = false;
@@ -47,32 +53,33 @@ public class Main {
 	public static Map<String, Integer> allstats = new HashMap<String,Integer>();	
 	public static Map<String, Map<String, Integer>> chanstats = new HashMap<String, Map<String, Integer>>();
 	public static Map<String, JsonObject> chandata = new HashMap<String, JsonObject>();
-	private static Map<String, Long> startedAt = new HashMap<String, Long>();
+	public static Map<String, Long> joinedAt = new HashMap<String, Long>();
 	public static long botStarted;
-	private static ChatterBotSession cbot;
+	private static ChatterBot cbotfac;
+	private static Map<String, ChatterBotSession> cbot = new HashMap<String,ChatterBotSession>();
 	private static JEP j;
 	private static String logURL = "api.gocode.it/irclog.php";
 	public static void main(String... args){
 		argu = args;
 		Config.botOwner=args[2];Config.startingChannel=Config.botOwner;
 		try {
-			
 			JsonArray wisServers = new Gson().fromJson(returnGet("http://tmi.twitch.tv/servers?cluster=group"), JsonObject.class).get("servers").getAsJsonArray();
 			int wisServersSize = wisServers.size()-1;
 			wis = new WhisperIRC(wisServers.get(randInt(0,wisServersSize)).getAsString(),args[0],args[1]);
 			wis.Connect();
 			wis.start();
-			
 
 			bot = new ChannelIRC(Config.server,args[0],args[1]);
 			j = new JEP();j.addStandardConstants();j.addStandardFunctions();j.addComplex();j.setAllowUndeclared(true);j.setAllowAssignment(true);j.setImplicitMul(true);
-			cbot = new ChatterBotFactory().create(ChatterBotType.CLEVERBOT).createSession();
+			cbotfac = new ChatterBotFactory().create(ChatterBotType.PANDORABOTS,"b0dafd24ee35a477");
 			System.out.println(bot.Connect()?"Connected":"Could Not Connect");
 			bot.Join(Config.startingChannel.toLowerCase(),false,false);
 			bot.Join(args[0], true, false);
-			//getChannels();
+			bot.Join("darkelement75", true, false);
+			getChannels();
 			botStarted = System.currentTimeMillis();
 			bot.start();
+			Followers.initThread();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -90,13 +97,16 @@ public class Main {
 			Main.bot.Join(channel.toLowerCase(),false,false);
 		}
 	}
-	private static void beClever(final String _sender,final String _message,final String _channel){
+	private static void beClever(final CommandSender _sender,final String _message){
 		new RThread(){
 			public void run(){
 				String response;
 				try {
-					response = cbot.think(_message);
-					//bot.sendMSG("@"+_sender+","+response, _channel);
+					if(!cbot.containsKey(_sender.name)){
+						cbot.put(_sender.name, cbotfac.createSession());
+					}
+					response = cbot.get(_sender.name).think(_message);
+					_sender.sendMSG("@"+_sender+" , "+response);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -107,13 +117,46 @@ public class Main {
 		final List<String> args = new ArrayList<String>();
 		boolean isOwner = _sender.equalsIgnoreCase(Config.botOwner),isCHOwner = _sender.equalsIgnoreCase(_channel);
 		args.addAll(Arrays.asList(_command.trim().split(" ")));
-		//for(String copyc : copyThese){
-		//	if(_sender.equalsIgnoreCase(copyc)){bot.sendMSG(_command.toLowerCase().replaceAll(" i ", _sender).replaceAll(" i ", _sender).replaceAll(Config.botOwner.toLowerCase(), _sender), _channel);return;}
-		//}
-		//for(String cleverc : cleverWith){
-		//	if((_sender+""+_channel).equalsIgnoreCase(cleverc))if(!_command.startsWith("!"))beClever(_sender,_command,_channel);
-		//}
+		
 		CommandSender CS = new CommandSender(_sender,_channel,_command,bot,isOwner,isCHOwner,isMod);
+		
+		if(raffleCommandHandler.curRaffles.containsKey(_channel.toLowerCase())){
+			if(_command.startsWith("1")){
+				//if(raffleCommandHandler.curRaffles.get(_channel).follower){
+				//	System.out.println(_sender);
+				//	if(CS.isFollower){
+				//		System.out.println(_sender);
+				//		if(!raffleCommandHandler.curRaffles.get(_channel).contestants.contains(_sender))
+				//		raffleCommandHandler.curRaffles.get(_channel).addContestant(_sender.toLowerCase());
+				//	}
+				//}else{
+					raffleCommandHandler.curRaffles.get(_channel).addContestant(_sender.toLowerCase());System.out.println(_sender);
+				//}
+			}
+			if(raffleCommandHandler.curRaffles.get(_channel).awaitingClaim){
+				if(raffleCommandHandler.curRaffles.get(_channel).winner!=null&&raffleCommandHandler.curRaffles.get(_channel).winner.equalsIgnoreCase(_sender)){
+					CS.sendMSG("The winner has claimed the prize!");
+					raffleCommandHandler.curRaffles.get(_channel).sendPrize(_sender);
+					new Thread("Deleting expired raffle"){
+						public void run(){
+							try {
+								Thread.sleep(1000);
+								raffleCommandHandler.curRaffles.remove(_channel);
+							} catch (InterruptedException e) {
+							}
+						}
+					}.start();
+				}
+			}
+		}
+		
+		if(beCleverCommand.cleverWith.contains(_sender.toLowerCase()+""+_channel.toLowerCase())){
+			if(!_command.startsWith("!"))
+				beClever(CS,_command);
+		}else if(beCleverCommand.globalCleverWith.contains(_sender.toLowerCase())){
+			if(!_command.startsWith("!"))
+				beClever(CS,_command);
+		}
 		String command = args.get(0).toLowerCase();
 		if(Command.commandList.containsKey(command)){
 			if(Command.commandList.get(command).hasPerms(CS)){
@@ -147,13 +190,13 @@ public class Main {
 		final List<String> args = new ArrayList<String>();
 		boolean isOwner = _sender.equalsIgnoreCase(Config.botOwner);
 		args.addAll(Arrays.asList(_command.trim().split(" ")));
-		//for(String copyc : copyThese){
-		//	if(_sender.equalsIgnoreCase(copyc)){bot.sendMSG(_command.toLowerCase().replaceAll(" i ", _sender).replaceAll(" i ", _sender).replaceAll(Config.botOwner.toLowerCase(), _sender), _channel);return;}
-		//}
-		//for(String cleverc : cleverWith){
-		//	if((_sender+""+_channel).equalsIgnoreCase(cleverc))if(!_command.startsWith("!"))beClever(_sender,_command,_channel);
-		//}
+
+		
 		CommandSender CS = new CommandSender(_sender,null,_command,wis,isOwner,false,false);
+		if(beCleverCommand.globalCleverWith.contains(_sender.toLowerCase())){
+			if(!_command.startsWith("!"))
+				beClever(CS,_command);
+		}
 		String command = args.get(0);
 		if(Command.commandList.containsKey(command)){
 			if(Command.commandList.get(command).hasPerms(CS)){

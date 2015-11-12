@@ -1,5 +1,6 @@
 package it.gocode.twitchBot.commands;
 
+import it.gocode.twitchBot.commands.channel.raffleCommandHandler;
 import it.gocode.twitchBot.commands.custom.customCommand;
 import it.gocode.twitchBot.commands.custom.customCommandHandler;
 import static it.gocode.twitchBot.commands.custom.togglableCustomCommand.togglableCustomCommandExecutor;
@@ -32,9 +33,10 @@ public abstract class Command {
 		addMiscCommand("math",new mathCommand()); //Done
 		addMiscCommand("beclever",new beCleverCommand(commandPerms.ModAbove)); //Done
 		addMiscCommand("mejoin",new joinCommand()); //Done
-		addMiscCommand("meleave",new leaveCommand(commandPerms.CHOwnerOnly)); //Done
+		addMiscCommand("meleave",new leaveCommand(commandPerms.CHOwnerAbove)); //Done
 		addMiscCommand("mcrawl",new mcrawlCommand(commandPerms.OwnerOnly)); //Done
-		addMiscCommand("muptime",new muptimeCommand()); //Done
+		addMiscCommand("muptime", new chanStatsCommand("%user%, This channel %uptime%.","%user%, %channel% %uptime%.")); //Done
+		addMiscCommand("chanstats", new chanStatsCommand("%user%, This channel has %viewers% viewers, and %uptime% %game%.","%user%, %channel% has %viewers% viewers, and %uptime% %game%.")); //Done
 		addMiscCommand("relchan",new reloadChanDataCommand(commandPerms.CHOwnerAbove)); //Done
 		addMiscCommand("coin",new tossCoinCommand()); //Done
 		addMiscCommand("rand",new randomNumCommand()); //Done
@@ -53,18 +55,14 @@ public abstract class Command {
 		addMiscCommand("clearallstats", new clearAllStatsCommand(commandPerms.OwnerOnly)); //Done
 		addMiscCommand("s", new sayCommand(commandPerms.CHOwnerAbove)); //Done
 		addMiscCommand("w", new wisCommand(commandPerms.OwnerOnly)); //Done
-		addMiscCommand("copycat", new copyCatCommand(commandPerms.CHOwnerAbove)); //TODO
 		addMiscCommand("fiteme", new customCommand("{[{isOwner?I can't fight my owner m8.:Ready to fite bich, Kappa}]}")); //Done
 		addMiscCommand("bless", new customCommand("%user% has blessed %{touser:you all!}%!")); //Done
 		addMiscCommand("ismod", new isModCommand(commandPerms.CHOwnerAbove)); //Done
+		addMiscCommand("mmute", new mmuteCommand(commandPerms.CHOwnerAbove)); //Done
 		
-		addMiscCommand("mcom",new customCommandHandler(commandPerms.ModAbove));
-		
-		addMiscCommand("maddcom", new addCustomCommand(commandPerms.ModAbove)); //DONE
-		addMiscCommand("mpermcom", new permCustomCommand(commandPerms.ModAbove)); //DONE
-		addMiscCommand("mdelcom", new delCustomCommand(commandPerms.ModAbove)); //TODO
-		
-		addChanCommand("mmute", new mmuteCommand(commandPerms.CHOwnerAbove)); //TODO
+		addMiscCommand("mcom",new customCommandHandler(commandPerms.ModAbove)); //Done
+
+		addChanCommand("raffle",new it.gocode.twitchBot.commands.channel.raffleCommandHandler(commandPerms.CHOwnerAbove)); //Done
 		addChanCommand("clearstats", new it.gocode.twitchBot.commands.channel.clearStatscommand(commandPerms.CHOwnerAbove)); //Done
 		addChanCommand("stats", new it.gocode.twitchBot.commands.channel.statsCommand()); //Done
 		addChanCommand("unban", new it.gocode.twitchBot.commands.channel.unbanCommand(commandPerms.ModAbove));
@@ -73,9 +71,9 @@ public abstract class Command {
 		addChanCommand("slap", new customCommand(commandPerms.ModAbove,"%user% has slapped %{touser:themself}% around with a large trout.")); //Done
 		addChanCommand("listmods",new it.gocode.twitchBot.commands.channel.listModsCommand(commandPerms.CHOwnerAbove)); //Done
 		
-		addWisCommand("slap", new it.gocode.twitchBot.commands.wis.slapCommand()); //TODO
+		addWisCommand("raffle", new it.gocode.twitchBot.commands.wis.raffleSetupHandler());
 		addWisCommand("stats", new it.gocode.twitchBot.commands.wis.statsCommand()); //Done
-		addWisCommand("listmods",new it.gocode.twitchBot.commands.wis.listModsCommand()); //TODO
+		addWisCommand("listmods",new it.gocode.twitchBot.commands.wis.listModsCommand()); //Done
 	}
 	
 	private static void addTogglableMiscCommand(String command, String able, String unable) {
@@ -100,17 +98,10 @@ public abstract class Command {
 		switch(perms){
 			case OwnerOnly:
 				return _CS.isOwner;
-			case CHOwnerOnly:
-				return _CS.isCHOwner;
-			case ModOnly:
-				return _CS.isMod;
 			case ModAbove:
 				return _CS.isMod||_CS.isCHOwner||_CS.isOwner;
 			case CHOwnerAbove:
 				return _CS.isCHOwner||_CS.isOwner;
-			case OwnerBelow:
-			case CHOwnerBelow:
-			case ModBelow:
 			case Anyone:
 			default:
 				return true;

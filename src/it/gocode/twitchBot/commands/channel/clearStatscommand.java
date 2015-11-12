@@ -16,6 +16,7 @@ public class clearStatscommand extends ChanCommand {
 
 	@Override
 	public void execute(CommandSender _sender, List<String> _args) {
+		Main.joinedAt.put(_sender.fromChannel,System.currentTimeMillis());
 		Main.chanstats.get(_sender.fromChannel).clear();
 		_sender.sendMSG("This chat's stats has been cleared.");
 	}

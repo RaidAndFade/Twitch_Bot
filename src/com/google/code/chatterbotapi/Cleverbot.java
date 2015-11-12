@@ -21,21 +21,23 @@ import java.util.Map;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 class Cleverbot implements ChatterBot {
-    private final String url;
+    private final String baseUrl;
+    private final String serviceUrl;
     private int endIndex;
 
-    public Cleverbot(String url, int endIndex) {
-        this.url = url;
+    public Cleverbot(String baseUrl, String serviceUrl, int endIndex) {
+        this.baseUrl = baseUrl;
+        this.serviceUrl = serviceUrl;
         this.endIndex = endIndex;
     }
 
-    @Override
     public ChatterBotSession createSession() {
         return new Session();
     }
     
     private class Session implements ChatterBotSession {
         private final Map<String, String> vars;
+        private final Map<String, String> cookies;
 
         public Session() {
             vars = new LinkedHashMap<String, String>();
@@ -45,19 +47,23 @@ class Cleverbot implements ChatterBot {
             vars.put("sub", "Say");
             vars.put("islearning", "1");
             vars.put("cleanslate", "false");
+            cookies = new LinkedHashMap<String, String>();
+            try {
+                Utils.request(baseUrl, cookies, null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         
-        @Override
         public ChatterBotThought think(ChatterBotThought thought) throws Exception {
             vars.put("stimulus", thought.getText());
 
             String formData = Utils.parametersToWWWFormURLEncoded(vars);
             String formDataToDigest = formData.substring(9, endIndex);
             String formDataDigest = Utils.md5(formDataToDigest);
-            System.out.println(formDataDigest);
             vars.put("icognocheck", formDataDigest);
 
-            String response = Utils.post(url, vars);
+            String response = Utils.request(serviceUrl, cookies, vars);
             
             String[] responseValues = response.split("\r");
             
@@ -93,7 +99,6 @@ class Cleverbot implements ChatterBot {
             return responseThought;
         }
 
-        @Override
         public String think(String text) throws Exception {
             ChatterBotThought thought = new ChatterBotThought();
             thought.setText(text);

@@ -44,12 +44,12 @@ public abstract class togglableCustomCommand extends customCommand{
 		@Override
 		public void execute(CommandSender _sender, List<String> _args) {
 			if(_args.size()>1){
-				if(Slave.ables.contains(_args.get(1))){
-					Slave.ables.remove(_args.get(1));
+				if(Slave.ables.contains(_args.get(1).toLowerCase())){
+					Slave.ables.remove(_args.get(1).toLowerCase());
 				}else{
-					Slave.ables.add(_args.get(1));
+					Slave.ables.add(_args.get(1).toLowerCase());
 				}
-				_sender.sendMSG(_args.get(1)+" is"+(!Slave.ables.contains(_args.get(1))?" no longer":" now")+" "+statement);
+				_sender.sendMSG(_args.get(1).toLowerCase()+" is"+(!Slave.ables.contains(_args.get(1).toLowerCase())?" no longer":" now")+" "+statement);
 			}else{
 				
 			}

@@ -11,8 +11,12 @@ public class CommandSender {
 	public boolean isCHOwner;
 	public boolean isMod;
 	public Irc fromIrc;
+	public boolean isFollower;
 	public CommandSender(String _name, String _channel, String _comm, Irc _from, boolean _isOwner, boolean _isCHOwner, boolean _isMod){
-		name = _name.toLowerCase();fromChannel = _channel;fromIrc=_from;isOwner = _isOwner;isCHOwner = _isCHOwner;isMod = _isMod;command = _comm;
+		this(_name,_channel,_comm,_from,_isOwner,_isCHOwner,_isMod,false);
+	}
+	public CommandSender(String _name, String _channel, String _comm, Irc _from, boolean _isOwner, boolean _isCHOwner, boolean _isMod, boolean _isFollower){
+		name = _name.toLowerCase();fromChannel = _channel;fromIrc=_from;isOwner = _isOwner;isCHOwner = _isCHOwner;isMod = _isMod;command = _comm;isFollower = _isFollower;
 	}
 	public void sendMSG(String _msg,boolean whisperPref){
 		if(this.fromChannel==null||whisperPref){
